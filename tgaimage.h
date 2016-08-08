@@ -60,6 +60,8 @@ struct TGAColor {
     }
 };
 
+typedef TGAColor Color;
+
 class TGAImage {
 protected:
     unsigned char* data;
@@ -94,5 +96,6 @@ public:
     void clear();
 };
 
-#endif //__IMAGE_H__
+typedef TGAImage Canvas;
 
+#endif //__IMAGE_H__

@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+renderer
+
+# Project file
+*.geany
+
+# Outputs
+*.tga
