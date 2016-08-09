@@ -59,32 +59,27 @@ void ModelTest()
     Model model;
     model.Read("model.obj");
 
-    vec3f lightDir = Normalize( vec3f(0.2, 0.3, 0.7) );
+    TGAImage texture;
+    texture.read_tga_file("african_head_diffuse.tga");
+    texture.flip_vertically();
+
+    vec3f lightDir = Normalize( vec3f(0, 0, 1) );
 
     for (uint32_t i = 0; i < model.NumFaces(); i++)
     {
         Face face = model.GetFace(i);
-        vec3f vertex1 = face.v[0].geom;
-        vec3f vertex2 = face.v[1].geom;
-        vec3f vertex3 = face.v[2].geom;
+        Vertex vertex1 = face.v[0];
+        Vertex vertex2 = face.v[1];
+        Vertex vertex3 = face.v[2];
 
-        vec3f dir1 = vertex2 - vertex1;
-        vec3f dir2 = vertex3 - vertex1;
+        vertex1.geom.x = (vertex1.geom.x + 1) * width / 2.0f;
+        vertex1.geom.y = (vertex1.geom.y + 1) * height / 2.0f;
+        vertex2.geom.x = (vertex2.geom.x + 1) * width / 2.0f;
+        vertex2.geom.y = (vertex2.geom.y + 1) * height / 2.0f;
+        vertex3.geom.x = (vertex3.geom.x + 1) * width / 2.0f;
+        vertex3.geom.y = (vertex3.geom.y + 1) * height / 2.0f;
 
-        vec3f norm = Normalize( Cross(dir1, dir2) );
-        float lightFactor = norm * lightDir;
-        if (lightFactor < 0)
-            continue;
-
-        Color color = Color (255 * lightFactor, 255 * lightFactor, 255 * lightFactor);
-
-        vec3f screen1 ((vertex1.x + 1) * width / 2.0, (vertex1.y + 1) * height / 2.0, vertex1.z);
-        vec3f screen2 ((vertex2.x + 1) * width / 2.0, (vertex2.y + 1) * height / 2.0, vertex2.z);
-        vec3f screen3 ((vertex3.x + 1) * width / 2.0, (vertex3.y + 1) * height / 2.0, vertex3.z);
-
-        printf ("%f %f %f\n", screen1.y, screen2.y, screen3.y);
-
-        Rasterize(screen1, screen2, screen3, color, &image, zBuffer, i);
+        Rasterize(vertex1, vertex2, vertex3, zBuffer, &texture, lightDir, &image, i);
     }
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image

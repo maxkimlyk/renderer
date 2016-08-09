@@ -11,7 +11,7 @@
 struct Vertex
 {
     vec3f geom;
-    vec2i tex;
+    vec2f tex;
     vec3f norm;
 };
 #pragma pack(pop)
@@ -32,7 +32,7 @@ class Model
 {
 private:
     std::vector<vec3f> geom;
-    std::vector<vec2i> tex;
+    std::vector<vec2f> tex;
     std::vector<vec3f> norm;
     std::vector<IndexFace> iface;
 
@@ -41,11 +41,28 @@ private:
         switch (line[0])
         {
         case 'v':
+            if (line[1] != 't' && line[1] != 'n')
             {
                 float x, y, z;
                 sscanf(line, "v %f %f %f", &x, &y, &z);
                 vec3f vec(x, y, z);
                 geom.push_back(vec);
+                break;
+            }
+            else if (line[1] == 't')
+            {
+                float u, v;
+                sscanf(line, "vt %f %f", &u, &v);
+                vec2f vec(u, v);
+                tex.push_back(vec);
+                break;
+            }
+            else if (line[1] == 'n')
+            {
+                float x, y, z;
+                sscanf(line, "vn %f %f %f", &x, &y, &z);
+                vec3f vec(x, y, z);
+                norm.push_back(vec);
                 break;
             }
 
@@ -94,6 +111,12 @@ public:
         face.v[0].geom = geom[ iface[i].v1 ];
         face.v[1].geom = geom[ iface[i].v2 ];
         face.v[2].geom = geom[ iface[i].v3 ];
+        face.v[0].tex = tex[ iface[i].t1 ];
+        face.v[1].tex = tex[ iface[i].t2 ];
+        face.v[2].tex = tex[ iface[i].t3 ];
+        face.v[0].norm = norm[ iface[i].n1 ];
+        face.v[1].norm = norm[ iface[i].n2 ];
+        face.v[2].norm = norm[ iface[i].n3 ];
         return face;
     }
 
