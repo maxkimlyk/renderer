@@ -5,5 +5,7 @@
 #include "tgaimage.h"
 
 void Line(vec2i p1, vec2i p2, Color color, Canvas *canvas);
+void Triangle(vec2i p1, vec2i p2, vec2i p3, Color color, Canvas *canvas);
+void Rasterize(vec3f p1, vec3f p2, vec3f p3, Color color, Canvas *canvas, float zBuffer[], uint32_t i);
 
 #endif

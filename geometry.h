@@ -1,166 +1,124 @@
 #ifndef _GEOMETRY_H_
 #define _GEOMETRY_H_
 
-#include <assert.h>
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
 
-template <typename number, size_t dimensions>
-struct vec
+template <typename type> struct vec2
 {
-	number coord[dimensions];
+    type x, y;
 
-	vec()
-	{}
+    vec2()
+    {}
 
-	number& operator[](size_t i)
-	{
-		assert(i < dimensions);
-		return coord[i];
-	}
+    vec2(type x, type y):
+      x(x), y(y)
+    {}
 };
 
-template <typename number>
-struct vec<number, 2>
+template <typename type> float Length (const vec2<type> &v)
 {
-	number x, y;
+    return sqrt( v.x*v.x + v.y*v.y );
+}
 
-	vec()
-	{}
+template <typename type> vec2<type> Normalize (vec2<type> v)
+{
+    float length = Length(v);
+    if(length > 0)
+    {
+        v.x /= length;
+        v.y /= length;
+    }
+    return v;
+}
 
-	vec(number x, number y) :
-		x(x), y(y) {}
+template <typename type> vec2<type> operator+ (const vec2<type> &v1, const vec2<type> &v2)
+{
+    return vec2<type> (v1.x + v2.x, v1.y + v2.y);
+}
 
-	number& operator[](size_t i)
-	{
-		assert(i < 2);
-		return (&x)[i];
-	}
+template <typename type> vec2<type> operator- (const vec2<type> &v1, const vec2<type> &v2)
+{
+    return vec2<type> (v1.x - v2.x, v1.y - v2.y);
+}
+
+template <typename type> type operator* (const vec2<type> &v1, const vec2<type> &v2)
+{
+    return  (v1.x * v2.x + v1.y * v2.y);
+}
+
+template <typename type> vec2<type> operator* (float coef, const vec2<type> &v)
+{
+    return vec2<type> (coef * v.x, coef * v.y);
+}
+
+template <typename type> vec2<type> operator* (const vec2<type> &v, float coef)
+{
+    return vec2<type> (v.x * coef, v.y * coef);
+}
+
+template <typename type> struct vec3
+{
+    type x, y, z;
+
+    vec3()
+    {}
+
+    vec3(type x, type y, type z):
+      x(x), y(y), z(z)
+    {}
 };
 
-template <typename number>
-struct vec<number, 3>
+template <typename type> float Length(const vec3<type> &v)
 {
-	number x, y, z;
-
-	vec()
-	{}
-
-	vec(number x, number y, number z) :
-		x(x), y(y), z(z) {}
-
-	number& operator[](size_t i)
-	{
-		assert(i < 3);
-		return (&x)[i];
-	}
-};
-
-template <typename num, size_t dim>
-vec<num, dim> operator+ (vec<num, dim> v1, vec<num, dim> &v2)
-{
-	for (size_t i = 0; i < dim; i++)
-		v1[i] += v2[i];
-	return v1;
+    return sqrt( v.x*v.x + v.y*v.y + v.z*v.z );
 }
 
-template <typename num, size_t dim>
-vec<num, dim> operator- (vec<num, dim> v1, vec<num, dim> &v2)
+template <typename type> vec3<type> Normalize (vec3<type> v)
 {
-	for (size_t i = 0; i < dim; i++)
-		v1[i] -= v2[i];
-	return v1;
+    float length = Length(v);
+    if (length > 0)
+    {
+        v.x /= length;
+        v.y /= length;
+        v.z /= length;
+    }
+    return v;
 }
 
-template <typename num, size_t dim, typename constant>
-vec<num, dim> operator* (vec<num, dim> v, constant c)
+template <typename type> vec3<type> Cross(const vec3<type> &v, const vec3<type> &u)
 {
-	for (size_t i = 0; i < dim; i++)
-		v[i] *= c;
-	return v;
+	return vec3<type> (v.y * u.z - v.z * u.y, v.z * u.x - v.x * u.z, v.x * u.y - v.y * u.x);
 }
 
-template <typename num, size_t dim, typename constant>
-vec<num, dim> operator* (constant c, vec<num, dim> v)
+template <typename type> vec3<type> operator+ (const vec3<type> &v1, const vec3<type> &v2)
 {
-	for (size_t i = 0; i < dim; i++)
-		v[i] *= c;
-	return v;
+    return vec3<type> (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
 
-template <typename num, size_t dim, typename constant>
-vec<num, dim> operator/ (vec<num, dim> v, constant c)
+template <typename type> vec3<type> operator- (const vec3<type> &v1, const vec3<type> &v2)
 {
-	for (size_t i = 0; i < dim; i++)
-		v[i] /= c;
-	return v;
+    return vec3<type> (v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
-template <typename num, size_t dim>
-num operator* (vec<num, dim> &v1, vec<num, dim> &v2)
+template <typename type> type operator* (const vec3<type> &v1, const vec3<type> &v2)
 {
-	num sum = 0;
-	for (size_t i = 0; i < dim; i++)
-		sum += v1[i] * v2[i];
-	return sum;
+    return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
 }
 
-template <typename num, size_t dim>
-std::ostream& operator<< (std::ostream& stream, vec<num, dim> &v)
+template <typename type> vec3<type> operator* (float coef, const vec3<type> &v)
 {
-	stream << "(";
-	for (size_t i = 0; i < dim - 1; i++)
-		stream << v[i] << ",";
-	stream << v[dim - 1] << ")";
-	return stream;
+    return vec3<type> (coef * v.x, coef * v.y, coef * v.z);
 }
 
-template <typename num>
-vec<num, 3> Cross(vec<num, 3> &v, vec<num, 3> &u)
+template <typename type> vec3<type> operator* (const vec3<type> &v, float coef)
 {
-	return vec<num, 3>(v.y * u.z - v.z * u.y, v.z * u.x - v.x * u.z, v.x * u.y - v.y * u.x);
+    return vec3<type> (v.x * coef, v.y * coef, v.z * coef);
 }
 
-template <typename num, size_t dim>
-vec<num, dim> Normalize(vec<num, dim> v)
-{
-	float length = sqrt(v * v);
-	if (length > 0)
-		v = v / length;
-	return  v;
-}
-
-template <typename num, size_t dim>
-vec<num, dim + 1> Embed(vec<num, dim> &v, num fill = 1)
-{
-	vec<num, dim + 1> res;
-	for (size_t i = 0; i < dim; i++)
-		res[i] = v[i];
-	res[dim] = fill;
-	return res;
-}
-
-template <typename num, size_t dim>
-vec<num, dim - 1> Eject(vec<num, dim> &v)
-{
-	vec<num, dim - 1> res;
-	for (size_t i = 0; i < dim - 1; i++)
-		res[i] = v[i];
-	return res;
-}
-
-template <typename num, size_t dim>
-vec<int, dim> Round(vec<num, dim> &v)
-{
-    vec<int, dim> res;
-    for (size_t i = 0; i < dim; i++)
-        res[i] = round(v[i]);
-    return res;
-}
-
-typedef vec<int, 2>   vec2i;
-typedef vec<float, 2> vec2f;
-typedef vec<int, 3>   vec3i;
-typedef vec<float, 3> vec3f;
+typedef vec2<int>   vec2i;
+typedef vec2<float> vec2f;
+typedef vec3<int>   vec3i;
+typedef vec3<float> vec3f;
 
 #endif

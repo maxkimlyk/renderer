@@ -10,3 +10,6 @@ tgaimage.o: tgaimage.cpp tgaimage.h
 
 render.o: render.cpp render.h
 	$(CC) $(CFLAGS) render.cpp -o $@
+
+geomtest:
+	$(CC) $(LFLAGS) geomTest.cpp -o geomTest

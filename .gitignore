@@ -28,9 +28,13 @@
 *.out
 *.app
 renderer
+geomTest
 
 # Project file
 *.geany
 
 # Outputs
 *.tga
+
+# Tags
+*.tags
