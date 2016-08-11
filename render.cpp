@@ -181,16 +181,19 @@ void Rasterize(Vertex vertex1, Vertex vertex2, Vertex vertex3, float zBuffer[], 
             vec3f p = v1 + s * (v2 - v1);
             
             int index = x + y * canvas->get_width();
-            if (p.z > zBuffer[index])
+            if (0 <= x && x < canvas->get_width() && 0 <= y && y < canvas->get_height())
             {
-                zBuffer[index] = p.z;
+                if (p.z > zBuffer[index])
+                {
+                    zBuffer[index] = p.z;
 
-                vec2f tex = tex1 + s * (tex2 - tex1);
-                vec3f norm = norm1 + s * (norm2 - norm1);
-                //printf("norm: %f %f %f\n", norm.x, norm.y, norm.z);
-                Color color = texture->get(tex.x * texture->get_width(), tex.y * texture->get_height());
-                float lightFactor = norm * lightDir;
-                canvas->set(x, y, color * lightFactor);
+                    vec2f tex = tex1 + s * (tex2 - tex1);
+                    vec3f norm = norm1 + s * (norm2 - norm1);
+                    //printf("norm: %f %f %f\n", norm.x, norm.y, norm.z);
+                    Color color = texture->get(tex.x * texture->get_width(), tex.y * texture->get_height());
+                    float lightFactor = norm * lightDir;
+                    canvas->set(x, y, color * lightFactor);
+                }
             }
         }
     }

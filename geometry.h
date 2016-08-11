@@ -116,9 +116,108 @@ template <typename type> vec3<type> operator* (const vec3<type> &v, float coef)
     return vec3<type> (v.x * coef, v.y * coef, v.z * coef);
 }
 
+#pragma pack(push, 1)
+template <typename type> struct vec4
+{
+    type x, y, z, w;
+
+    vec4()
+    {}
+
+    vec4 (type x, type y, type z, type w):
+      x(x), y(y), z(z), w(w)
+    {}
+
+    vec4 (vec3<type> v3, type w):
+      x(v3.x), y(v3.y), z(v3.z), w(w)
+    {}
+
+    type& operator() (size_t i)
+    {
+        type *base = (type*)(this);
+        return base[i];
+    }
+
+    const type& operator() (size_t i) const
+    {
+        type *base = (type*)(this);
+        return base[i];
+    }
+};
+#pragma pack(pop)
+
 typedef vec2<int>   vec2i;
 typedef vec2<float> vec2f;
 typedef vec3<int>   vec3i;
 typedef vec3<float> vec3f;
+typedef vec4<int>   vec4i;
+typedef vec4<float> vec4f;
+
+// **************************************************************************
+template <typename type> struct mat4
+{
+    union
+    {
+        struct
+        {
+            type _11, _12, _13, _14;
+            type _21, _22, _23, _24;
+            type _31, _32, _33, _34;
+            type _41, _42, _43, _44;
+        };
+        type _[16];
+    };
+
+    type& operator() (size_t i, size_t j)
+    {
+        return _[i*4 + j];
+    }
+
+    const type& operator() (size_t i, size_t j) const
+    {
+        return _[i*4 + j];
+    }
+
+    static mat4<type> Identity()
+    {
+        mat4<type> I = {
+            1,  0,  0,  0,
+            0,  1,  0,  0,
+            0,  0,  1,  0,
+            0,  0,  0,  1
+        };
+        return I;
+    }
+};
+
+template <typename type> mat4<type> operator* (const mat4<type> &mat1, const mat4<type> &mat2)
+{
+    mat4<type> result;
+
+    for (size_t i = 0; i < 4; i++)
+        for (size_t j = 0; j < 4; j++)
+        {
+            type sum = 0;
+            for (size_t k = 0; k < 4; k++)
+                sum += mat1(i, k) * mat2(k, j);
+            result(i, j) = sum;
+        }
+    return result;
+}
+
+template <typename type> vec4<type> operator * (const mat4<type> &mat, const vec4<type> &vect)
+{
+    vec4<type> result;
+    for (size_t i = 0; i < 4; i++)
+    {
+        type sum = 0;
+        for (size_t k = 0; k < 4; k++)
+            sum += mat(i, k) * vect(k);
+        result(i) = sum;
+    }
+    return result;
+}
+
+typedef mat4<float> mat4f;
 
 #endif
