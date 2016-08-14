@@ -190,6 +190,10 @@ template <typename type> struct mat4
     }
 };
 
+mat4<float> RotationMatrixX(float angle);
+mat4<float> RotationMatrixY(float angle);
+mat4<float> MoveMatrix(float x, float y, float z);
+
 template <typename type> mat4<type> operator* (const mat4<type> &mat1, const mat4<type> &mat2)
 {
     mat4<type> result;

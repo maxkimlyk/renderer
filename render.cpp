@@ -198,3 +198,83 @@ void Rasterize(Vertex vertex1, Vertex vertex2, Vertex vertex3, float zBuffer[], 
         }
     }
 }
+
+void Rasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
+               vec2f tex1, vec2f tex2, vec2f tex3,
+               vec3f norm1, vec3f norm2, vec3f norm3,
+               float zBuffer[], Canvas *texture, vec3f lightDir, Canvas *canvas, uint32_t i)
+{
+    // sort vertices by y
+    if (vertex1.y > vertex2.y)
+    {
+        std::swap(vertex1, vertex2);
+        std::swap(tex1, tex2);
+        std::swap(norm1, norm2);
+    }
+    if (vertex2.y > vertex3.y)
+    {
+        std::swap(vertex2, vertex3);
+        std::swap(tex2, tex3);
+        std::swap(norm2, norm3);
+    }
+    if (vertex1.y > vertex2.y)
+    {
+        std::swap(vertex1, vertex2);
+        std::swap(tex1, tex2);
+        std::swap(norm1, norm2);
+    }
+
+    // save from float inaccuracy
+    vertex1.y = (int)vertex1.y;
+    vertex2.y = (int)vertex2.y;
+    vertex3.y = (int)vertex3.y;
+
+    // degenerate triangle
+    if (vertex1.y == vertex3.y)
+        return;
+
+    int totalHeight = vertex3.y - vertex1.y;
+    for (int y = vertex1.y; y <= vertex3.y; y++)
+    {
+        bool upperSegment = y > vertex2.y || vertex2.y - vertex1.y == 0;
+        int segmentHeight = upperSegment ? vertex3.y - vertex2.y : vertex2.y - vertex1.y;
+    
+        float t = (y - vertex1.y) / (float)totalHeight;
+        float u = upperSegment ? (y - vertex2.y) / (float) segmentHeight : (y - vertex1.y) / (float) segmentHeight;
+
+        vec3f v1 = vertex1 + t * (vertex3 - vertex1);
+        vec3f v2 = upperSegment ? vertex2 + u * (vertex3 - vertex2) : vertex1 + u * (vertex2 - vertex1);
+        vec2f t1 = tex1 + t * (tex3 - tex1);
+        vec2f t2 = upperSegment ? tex2 + u * (tex3 - tex2) : tex1 + u * (tex2 - tex1);
+        vec3f n1 = norm1 + t * (norm3 - norm1);
+        vec3f n2 = upperSegment ? norm2 + u * (norm3 - norm2) : norm1 + u * (norm2 - norm1);
+        
+        if (v1.x > v2.x)
+        {
+            std::swap(v1, v2);
+            std::swap(t1, t2);
+            std::swap(n1, n2);
+        }
+
+        for (int x = v1.x; x <= v2.x; x++)
+        {
+            float s = (v2.x == v1.x) ? 1.0f : (x - v1.x) / (v2.x - v1.x);
+            vec3f p = v1 + s * (v2 - v1);
+            
+            if (0 <= x && x < canvas->get_width() && 0 <= y && y < canvas->get_height())
+            {
+                int index = x + y * canvas->get_width();
+                if (p.z > zBuffer[index])
+                {
+                    zBuffer[index] = p.z;
+
+                    vec2f tex = t1 + s * (t2 - t1);
+                    vec3f norm = n1 + s * (n2 - n1);
+                    Color color = texture->get(tex.x * texture->get_width(), tex.y * texture->get_height());
+                    float lightFactor = norm * lightDir;
+                    canvas->set(x, y, color * lightFactor);
+                }
+            }
+        }
+    }
+}
