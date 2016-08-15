@@ -42,6 +42,13 @@ void Line(vec2i p1, vec2i p2, Color color, Canvas *canvas)
     }
 }
 
+void PoolTriangle(vec3f v1, vec3f v2, vec3f v3, Color color, Canvas *canvas)
+{
+    Line(vec2i(v1.x, v1.y), vec2i(v2.x, v2.y), color, canvas);
+    Line(vec2i(v2.x, v2.y), vec2i(v3.x, v3.y), color, canvas);
+    Line(vec2i(v3.x, v3.y), vec2i(v1.x, v1.y), color, canvas);
+}
+
 void Triangle(vec2i p1, vec2i p2, vec2i p3, Color color, Canvas *canvas)
 {
     // sort vertices by y
@@ -84,7 +91,7 @@ void Rasterize(vec3f p1, vec3f p2, vec3f p3, Color color, Canvas *canvas, float 
     p1.y = (int)p1.y;
     p2.y = (int)p2.y;
     p3.y = (int)p3.y;
-
+    
     // sort vertices by y
     if (p1.y > p2.y)
         std::swap(p1, p2);

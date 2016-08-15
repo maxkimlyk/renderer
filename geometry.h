@@ -188,6 +188,31 @@ template <typename type> struct mat4
         };
         return I;
     }
+
+    type Cofactor(size_t i, size_t j) const
+    {
+        type mat3[3][3];
+
+        int k = 0;
+        for (int y = 0; y < 4; y++)
+            for (int x = 0; x < 4; x++)
+            {
+                if (y != (int)i && x != (int)j)
+                {
+                    mat3[k/3][k%3] = _[y*4 + x];
+                    k++;
+                }
+            }
+
+        type result = mat3[0][0] * (mat3[1][1] * mat3[2][2] - mat3[1][2] * mat3[2][1]) -
+                      mat3[0][1] * (mat3[1][0] * mat3[2][2] - mat3[1][2] * mat3[2][0]) +
+                      mat3[0][2] * (mat3[1][0] * mat3[2][1] - mat3[1][1] * mat3[2][0]);
+
+        if (i % 2 != j % 2)
+            result *= -1;
+
+        return result;
+    }
 };
 
 mat4<float> RotationMatrixX(float angle);
@@ -220,6 +245,53 @@ template <typename type> vec4<type> operator * (const mat4<type> &mat, const vec
         result(i) = sum;
     }
     return result;
+}
+
+template <typename type> mat4<type> operator * (const mat4<type> &mat, type coef)
+{
+    mat4<type> result;
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            result(i, j) = mat(i, j) * coef;
+        }
+    return result;
+}
+
+template <typename type> mat4<type> Transpose (const mat4<type> &mat)
+{
+    mat4<type> result;
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            result(i, j) = mat(j, i);
+        }
+        
+    return result;
+}
+
+template <typename type> type Determ (const mat4<type> &mat)
+{
+    type result = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        result += mat(0, i) * mat.Cofactor(0, i);
+    }
+    return result;
+}
+
+template <typename type> mat4<type> Invert (const mat4<type> &mat)
+{
+    mat4<type> result;
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            result(i, j) = mat.Cofactor(i, j);
+        }
+
+    return Transpose(result) * (1.0f / Determ(mat));
 }
 
 typedef mat4<float> mat4f;
