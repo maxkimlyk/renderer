@@ -110,7 +110,7 @@ void ModelTest()
         zBuffer[i] = ZBUF_VALUE;
     }
 
-    mat4f modelView = lookAt(vec3f(5, 1, 10), vec3f(0, 0, 0), vec3f(0, 1, 0));
+    mat4f modelView = lookAt(vec3f(-5, 1, 10), vec3f(0, 0, 0), vec3f(0, 1, 0));
     mat4f normMat = Invert(Transpose(modelView));
     mat4f viewMatrix = viewport(0, 0, width, height) * modelView;
 
@@ -144,10 +144,8 @@ void ModelTest()
         vec3f screenNorm2 = Normalize( vec3f (norm2.x, norm2.y, norm2.z) );
         vec3f screenNorm3 = Normalize( vec3f (norm3.x, norm3.y, norm3.z) );
         
-        //PoolTriangle(screen1, screen2, screen3, COLOR_YELLOW, &image);
         Rasterize(screen1, screen2, screen3,
                   face.v[0].tex, face.v[1].tex, face.v[2].tex,
-                  //face.v[0].norm, face.v[1].norm, face.v[2].norm,
                   screenNorm1, screenNorm2, screenNorm3,
                   zBuffer, &texture, lightDir, &image, i);
     }
