@@ -1,6 +1,38 @@
 #include "render.h"
 #include <cmath>
 
+mat4f LookAt(vec3f eye, vec3f center, vec3f up)
+{
+    vec3f z = Normalize(eye - center);
+    vec3f x = Normalize(Cross(up, z));
+    vec3f y = Normalize(Cross(z, x));
+
+    mat4f minv = mat4f::Identity();
+    mat4f tr = mat4f::Identity();
+
+    minv._11 = x.x; minv._12 = x.y; minv._13 = x.z;
+    minv._21 = y.x; minv._22 = y.y; minv._23 = y.z;
+    minv._31 = z.x; minv._32 = z.y; minv._33 = z.z;
+
+    tr._14 = -center.x;
+    tr._24 = -center.y;
+    tr._34 = -center.z;
+    
+    return minv * tr;
+}
+
+mat4f Viewport(int x, int y, int width, int height)
+{
+    mat4f matrix = mat4f::Identity();
+    matrix._11 = width / 2.0f;
+    matrix._22 = height / 2.0f;
+    matrix._33 = 1.0f;
+    matrix._14 = x + width / 2.0f;
+    matrix._24 = y + height / 2.0f;
+    matrix._34 = 1.0f;
+    return matrix;
+}
+
 struct Rect
 {
     int left, right, bottom, top;
@@ -26,7 +58,7 @@ Rect BoundingBox(vec3f p1, vec3f p2, vec3f p3)
     return rect;
 }
 
-void BarRasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
+void Rasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
                   vec2f tex1, vec2f tex2, vec2f tex3,
                   vec3f norm1, vec3f norm2, vec3f norm3,
                   float *zBuffer, Canvas *texture, vec3f lightDir, Canvas *canvas)
