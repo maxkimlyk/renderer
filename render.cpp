@@ -103,3 +103,47 @@ void Rasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
         }
     }
 }
+
+void Rasterize(vec3f *screenCoord, Shader *shader, float *zBuffer, Canvas *canvas)
+{
+    vec3f vertex1 = screenCoord[0];
+    vec3f vertex2 = screenCoord[1];
+    vec3f vertex3 = screenCoord[2];
+
+    Rect bbox = BoundingBox(vertex1, vertex2, vertex3);
+
+    vec2f v12 = vec2f (vertex2.x - vertex1.x, vertex2.y - vertex1.y);
+    vec2f v13 = vec2f (vertex3.x - vertex1.x, vertex3.y - vertex1.y);
+
+    vec3f a = vec3f (v12.x, v13.x, 0);
+    vec3f b = vec3f (v12.y, v13.y, 0);
+    float denum = v12.x * v13.y - v12.y * v13.x; // the same as Cross(a,b).z
+    if (denum == 0) // degenerate triangle
+        return;
+    float coef = 1.0f / denum;
+
+    for (int y = bbox.bottom; y <= bbox.top; y++)
+    {
+        for (int x = bbox.left; x <= bbox.right; x++)
+        {
+            a.z = vertex1.x - x;
+            b.z = vertex1.y - y;
+            vec3f tmp = Cross(a, b) * coef;
+            vec3f bar = vec3f (1.0f - tmp.x - tmp.y, tmp.x, tmp.y);
+            if (bar.x < 0 || bar.y < 0 || bar.z < 0)
+                continue;
+
+            float z = bar * vec3f (vertex1.z, vertex2.z, vertex3.z);
+            int zIndex = x + y * canvas->get_width();
+            if (x < 0 || x >= canvas->get_width() || y < 0 || y >= canvas->get_height() || z < zBuffer[zIndex])
+                continue;
+
+            Color color;
+            if (shader->Fragment(bar, &color))   // Fragment() returns true if want to discard pixel
+                continue;
+                
+            zBuffer[zIndex] = z;
+            canvas->set(x, y, color);
+        }
+    }
+}

@@ -4,7 +4,70 @@
 #include "render.h"
 #include "model.h"
 
-void ModelTest()
+struct GouraudShader : Shader
+{
+    vec3f lightDir;
+    Model *model;
+    mat4f viewMat;
+
+    float lightIntensity[3];
+
+    vec4f Vertex(
+        int numFace,     // index number of face
+        int numVertex)   // index number of vertex in triangle
+    {
+        vec3f norm = model->GetFace(numFace).v[numVertex].norm;
+        lightIntensity[numVertex] = norm * lightDir;
+        
+        vec4f vertex = vec4f (model->GetFace(numFace).v[numVertex].geom, 1);
+        return viewMat * vertex;
+    }
+
+    bool Fragment(vec3f bar, Color *color)
+    {
+        float intensity = bar * vec3f(lightIntensity[0], lightIntensity[1], lightIntensity[2]);
+        *color = Color(255, 255, 255) * intensity;
+        return false;    // don't discard the pixel
+    }
+};
+
+struct TextureShader : Shader
+{
+    Model  *model;
+    Canvas *texture;
+    mat4f  viewMat;
+    vec3f  lightDir;
+
+    float lightIntensity[3];
+    vec2f texCoord[3];
+
+    vec4f Vertex(
+        int numFace,     // index number of face
+        int numVertex)   // index number of vertex in triangle
+    {
+        vec3f norm = model->GetFace(numFace).v[numVertex].norm;
+        lightIntensity[numVertex] = norm * lightDir;
+
+        vec2f tex = model->GetFace(numFace).v[numVertex].tex;
+        texCoord[numVertex] = tex;
+        
+        vec4f vertex = vec4f (model->GetFace(numFace).v[numVertex].geom, 1);
+        return viewMat * vertex;
+    }
+
+    bool Fragment(vec3f bar, Color *color)
+    {
+        float intensity = bar * vec3f(lightIntensity[0], lightIntensity[1], lightIntensity[2]);
+        float texX      = bar * vec3f(texCoord[0].x,     texCoord[1].x,     texCoord[2].x);
+        float texY      = bar * vec3f(texCoord[0].y,     texCoord[1].y,     texCoord[2].y);
+        
+        Color textureColor = texture->get(texX * texture->get_width(), texY * texture->get_height());
+        *color = textureColor * intensity;
+        return false;    // don't discard the pixel
+    }
+};
+
+void DrawModel()
 {
     const char * MODEL_NAME = "model.obj";
     const char * TEXTURE_NAME = "african_head_diffuse.tga";
@@ -30,36 +93,24 @@ void ModelTest()
         zBuffer[i] = ZBUF_VALUE;
 
     mat4f modelView  = LookAt(EYE, CENTER, UP);
-    mat4f normCorr   = Invert(Transpose(modelView));
+    //mat4f normCorr   = Invert(Transpose(modelView));
     mat4f viewMatrix = Viewport(0, 0, WIDTH, HEIGHT) * modelView;
 
-    vec3f lightDir = vec3f(0.5, 0, 0.7);
+    TextureShader shader;
+    shader.lightDir = Normalize( vec3f(2, 1, 10) );
+    shader.model = &model;
+    shader.viewMat = viewMatrix;
+    shader.texture = &texture;
 
     for (uint32_t i = 0; i < model.NumFaces(); i++)
     {
-        Face face = model.GetFace(i);
-
-        vec3f screen[3];
-        vec2f tex[3];
-        vec3f norm[3];
-        
+        vec3f screenCoord[3];
         for (int k = 0; k < 3; k++)
         {
-            vec4f vertex = vec4f (face.v[k].geom, 1);
-            vertex = viewMatrix * vertex;
-            screen[k] = vec3f (vertex.x / vertex.w, vertex.y / vertex.w, vertex.z / vertex.w);
-
-            tex[k] = face.v[k].tex;
-
-            vec4f rawNorm = vec4f (face.v[k].norm, 1);
-            rawNorm = normCorr * rawNorm;
-            norm[k] = Normalize( vec3f (rawNorm.x, rawNorm.y, rawNorm.z) );
+            vec4f coord = shader.Vertex(i, k);
+            screenCoord[k] = vec3f (coord.x / coord.w, coord.y / coord.w, coord.z / coord.w);
         }
-
-        Rasterize(screen[0], screen[1], screen[2],
-                  tex[0], tex[1], tex[2],
-                  norm[0], norm[1], norm[2],
-                  zBuffer, &texture, lightDir, &image);
+        Rasterize(screenCoord, &shader, zBuffer, &image);
     }
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
@@ -68,7 +119,7 @@ void ModelTest()
 
 int main(int argc, char** argv)
 {
-    ModelTest();
+    DrawModel();
 
     return 0;
 }
