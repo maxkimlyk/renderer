@@ -4,60 +4,6 @@
 #include "render.h"
 #include "model.h"
 
-const TGAColor COLOR_WHITE = TGAColor(255, 255, 255, 255);
-const TGAColor COLOR_RED   = TGAColor(255, 0,   0,   255);
-const TGAColor COLOR_GREEN = TGAColor(0, 255,   0,   255);
-const TGAColor COLOR_BLUE  = TGAColor(0, 0,   255,   255);
-const TGAColor COLOR_YELLOW = TGAColor(200, 210, 0, 255);
-
-void LineTest()
-{
-    TGAImage image(100, 100, TGAImage::RGB);
-    Line(vec2i(0, 0), vec2i(99, 99), COLOR_YELLOW, &image);
-    Line(vec2i(73, 23), vec2i(9, 99), COLOR_RED, &image);
-    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    image.write_tga_file("lines.tga");
-}
-
-void TriangleTest()
-{
-    TGAImage image(200, 200, TGAImage::RGB);
-
-    Triangle(vec2i(10, 10), vec2i(60, 90), vec2i(90, 10), COLOR_WHITE, &image);
-    Triangle(vec2i(110, 90), vec2i(160, 10), vec2i(190, 90), COLOR_WHITE, &image);
-    Triangle(vec2i(10, 110), vec2i(10, 190), vec2i(90, 110), COLOR_WHITE, &image);
-    Triangle(vec2i(110, 110), vec2i(190, 190), vec2i(190, 110), COLOR_WHITE, &image);
-
-    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    image.write_tga_file("triangle.tga");
-}
-
-void RasterizeTest()
-{
-    TGAImage image(200, 200, TGAImage::RGB);
-
-    //Rasterize(vec3f(10, 10, 10), vec3f(60, 90, 10), vec3f(90, 10, 10), COLOR_WHITE, &image);
-    //Rasterize(vec3f(110, 90, 10), vec3f(160, 10, 10), vec3f(190, 90, 10), COLOR_WHITE, &image);
-    //Rasterize(vec3f(10, 110, 10), vec3f(10, 190, 10), vec3f(90, 110, 10), COLOR_WHITE, &image);
-    //Rasterize(vec3f(110, 110, 10), vec3f(190, 190, 10), vec3f(190, 110, 10), COLOR_WHITE, &image);
-
-    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    image.write_tga_file("rasterize.tga");
-}
-
-template <typename type> std::ostream& operator<< (std::ostream &stream, mat4<type> &mat)
-{
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            std::cout << mat(i, j) << " ";
-        }
-        std::cout << "\n";
-    }
-    return stream;
-}
-
 mat4f lookAt(vec3f eye, vec3f center, vec3f up)
 {
     vec3f z = Normalize(eye - center);
@@ -114,7 +60,7 @@ void ModelTest()
     mat4f normMat = Invert(Transpose(modelView));
     mat4f viewMatrix = viewport(0, 0, width, height) * modelView;
 
-    vec3f lightDir = vec3f(0, 0, 1);
+    vec3f lightDir = vec3f(0.5, 0, 0.7);
 
     for (uint32_t i = 0; i < model.NumFaces(); i++)
     {
@@ -143,61 +89,20 @@ void ModelTest()
         vec3f screenNorm1 = Normalize( vec3f (norm1.x, norm1.y, norm1.z) );
         vec3f screenNorm2 = Normalize( vec3f (norm2.x, norm2.y, norm2.z) );
         vec3f screenNorm3 = Normalize( vec3f (norm3.x, norm3.y, norm3.z) );
-        
-        Rasterize(screen1, screen2, screen3,
-                  face.v[0].tex, face.v[1].tex, face.v[2].tex,
-                  screenNorm1, screenNorm2, screenNorm3,
-                  zBuffer, &texture, lightDir, &image, i);
-    }
 
-    // coord system
-    vec3f vertices[6] = { vec3f(0, 0, 0), vec3f(1, 0, 0),
-                          vec3f(0, 0, 0), vec3f(0, 1, 0),
-                          vec3f(0, 0, 0), vec3f(0, 0, 1) };
-    Color colors[3] = {COLOR_RED, COLOR_GREEN, COLOR_BLUE};
-
-    for (size_t i = 0; i < 6; i+=2)
-    {
-        vec4f v1 (vertices[i], 1);
-        vec4f v2 (vertices[i+1], 1);
-
-        v1 = viewMatrix * v1;
-        v2 = viewMatrix * v2;
-
-        vec3f screen1 = vec3f (v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
-        vec3f screen2 = vec3f (v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
-
-        Line(vec2i(screen1.x, screen1.y), vec2i(screen2.x, screen2.y), colors[i/2], &image);
+        BarRasterize(screen1, screen2, screen3,
+                     face.v[0].tex, face.v[1].tex, face.v[2].tex,
+                     screenNorm1, screenNorm2, screenNorm3,
+                     zBuffer, &texture, lightDir, &image);
     }
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
 }
 
-void MatrixTest()
-{
-    mat4<float> matA = {
-        5, 2, 3, 4,
-        9, 2, 1, 2,
-        0, 3, 8, 3,
-        0, 9, 0, 0
-    };
-    
-    std::cout << matA << "\n";
-    std::cout << Determ(matA) << "\n";
-    mat4<float> invA = Invert(matA);
-    std::cout << invA << "\n";
-    mat4<float> matB = invA * matA;
-    std::cout << matB << "\n";
-}
-
 int main(int argc, char** argv)
 {
-    LineTest();
-    TriangleTest();
-    RasterizeTest();
     ModelTest();
-    //MatrixTest();
 
     return 0;
 }

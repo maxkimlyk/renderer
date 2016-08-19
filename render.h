@@ -16,4 +16,9 @@ void Rasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
                vec3f norm1, vec3f norm2, vec3f norm3,
                float zBuffer[], Canvas *texture, vec3f lightDir, Canvas *canvas, uint32_t i);
 
+void BarRasterize(vec3f vertex1, vec3f vertex2, vec3f vertex3,
+                  vec2f tex1, vec2f tex2, vec2f tex3,
+                  vec3f norm1, vec3f norm2, vec3f norm3,
+                  float *zBuffer, Canvas *texture, vec3f lightDir, Canvas *canvas);
+
 #endif
